@@ -42,8 +42,8 @@ void setup()
   
   Serial.printf("Repeat Interval: %d | Fall Time: %d  | Tension Fall: %d  \n", interval,tempo,fall);
   // -- Configuração dos pinos --
-  //gpio_pad_select_gpio(GPIO_NUM_13);
-  gpio_pad_select_gpio(GPIO_NUM_2);
+  gpio_pad_select_gpio(V_OUT);
+  gpio_pad_select_gpio(LED_BLUE);
 
   // -- Direção dos pinos --
   gpio_set_direction(V_OUT, GPIO_MODE_OUTPUT);
@@ -62,7 +62,7 @@ void setup()
   ledc_timer_config(&timer_config);
 
 // -- Config channel do PWM --
-  channel_config.gpio_num = GPIO_NUM_13;
+  channel_config.gpio_num = GPIO_NUM_25;
   channel_config.speed_mode = LEDC_LOW_SPEED_MODE;
   channel_config.channel = LEDC_CHANNEL_0;
   channel_config .timer_sel = LEDC_TIMER_0;
@@ -85,6 +85,7 @@ void loop()
   
   
    gpio_set_level(LED_BLUE, 0);
+   gpio_set_level(V_OUT,1);
    //Serial.println("loop teste");
    vTaskDelay( 10 / portTICK_PERIOD_MS); // Função de Delay do FreeRTOS, em tempo real. 1000ms = 1s
 
@@ -102,19 +103,21 @@ void Task_Undershoot(void * params)
     Serial.println("UnderShoot");
     ledc_set_duty(LEDC_LOW_SPEED_MODE,LEDC_CHANNEL_0,10);
     ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
-    
-    vTaskDelay(tempo/portTICK_PERIOD_MS);
-    
-    for (int i = fall; i < 255 ; i ++)
+
+    bool state = 0;
+
+    for (int i = fall; i < 7 ; i ++)
     {
-      
-      gpio_set_level(LED_BLUE, 1);
-      ledc_set_duty(LEDC_LOW_SPEED_MODE,LEDC_CHANNEL_0,i);
-      ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
-      vTaskDelay(15 / portTICK_PERIOD_MS);
+      state = !state;
+      gpio_set_level(LED_BLUE, state);
+      gpio_set_level(V_OUT,0);
+      gpio_set_level(LED_BLUE, state);
+      //ledc_set_duty(LEDC_LOW_SPEED_MODE,LEDC_CHANNEL_0,i);
+      //ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
+      vTaskDelay(20 / portTICK_PERIOD_MS);
     }
 
-    vTaskDelay( interval / portTICK_PERIOD_MS); // Função de Delay do FreeRTOS, em tempo real 1000ms = 1s
+    vTaskDelay( 300000 / portTICK_PERIOD_MS); // Função de Delay do FreeRTOS, em tempo real 1000ms = 1s
 
   }
 }
