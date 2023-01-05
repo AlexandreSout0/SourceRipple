@@ -21,9 +21,9 @@ ledc_timer_config_t timer_config ;
 
 String command;
 
-int interval = 5000;
-int tempo = 1000;
-int fall = 255;
+int interval = 25000;
+int tempo = 13000;
+int fall = 0;
 
 
 
@@ -50,7 +50,6 @@ void setup()
   gpio_set_direction(LED_BLUE, GPIO_MODE_OUTPUT);
   // -- Internals Resistors Pull-Up --
   gpio_pullup_dis(V_OUT);
-  gpio_pullup_dis(V_OUT);
   // -- Internals Resistors Pull-Down ---
   gpio_pulldown_dis(V_OUT);
 
@@ -59,7 +58,7 @@ void setup()
   timer_config.speed_mode = LEDC_LOW_SPEED_MODE;
   timer_config.duty_resolution = LEDC_TIMER_8_BIT;
   timer_config.timer_num = LEDC_TIMER_0;
-  timer_config.freq_hz = 1000;
+  timer_config.freq_hz = 500;
   ledc_timer_config(&timer_config);
 
 // -- Config channel do PWM --
@@ -67,7 +66,7 @@ void setup()
   channel_config.speed_mode = LEDC_LOW_SPEED_MODE;
   channel_config.channel = LEDC_CHANNEL_0;
   channel_config .timer_sel = LEDC_TIMER_0;
-  channel_config.duty = 255; // 255 pwm inicia com duty cycle 100% | 0 pwm inicia com duty cycle 0%
+  channel_config.duty = 256; // 256 pwm inicia com duty cycle 100% | 0 pwm inicia com duty cycle 0%
   channel_config.hpoint = 0;
   ledc_channel_config(&channel_config);
   //xTaskCreate(&Task_, "Descrição/nome da Task", Tamanho da Stack Memory 1024 = 4K de memória,Parametro da Função, Prioridade de 0 até uxPriority ,Task Random );
@@ -87,7 +86,9 @@ void loop()
   
    gpio_set_level(LED_BLUE, 0);
    //Serial.println("loop teste");
-   vTaskDelay( 1000 / portTICK_PERIOD_MS); // Função de Delay do FreeRTOS, em tempo real. 1000ms = 1s
+   vTaskDelay( 10 / portTICK_PERIOD_MS); // Função de Delay do FreeRTOS, em tempo real. 1000ms = 1s
+
+
 
 
 
@@ -98,12 +99,22 @@ void Task_Undershoot(void * params)
   while(true)
   {
     
-    gpio_set_level(LED_BLUE, 1);
     Serial.println("UnderShoot");
-    ledc_set_fade_time_and_start(LEDC_LOW_SPEED_MODE,LEDC_CHANNEL_0,0,tempo, LEDC_FADE_WAIT_DONE);
-    ledc_set_fade_time_and_start(LEDC_LOW_SPEED_MODE,LEDC_CHANNEL_0,fall,tempo, LEDC_FADE_WAIT_DONE);
+    ledc_set_duty(LEDC_LOW_SPEED_MODE,LEDC_CHANNEL_0,10);
+    ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
     
-    vTaskDelay( interval / portTICK_PERIOD_MS); // Função de Delay do FreeRTOS, em tempo real. 1000ms = 1s
+    vTaskDelay(tempo/portTICK_PERIOD_MS);
+    
+    for (int i = fall; i < 255 ; i ++)
+    {
+      
+      gpio_set_level(LED_BLUE, 1);
+      ledc_set_duty(LEDC_LOW_SPEED_MODE,LEDC_CHANNEL_0,i);
+      ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
+      vTaskDelay(15 / portTICK_PERIOD_MS);
+    }
+
+    vTaskDelay( interval / portTICK_PERIOD_MS); // Função de Delay do FreeRTOS, em tempo real 1000ms = 1s
 
   }
 }
@@ -161,7 +172,7 @@ void Task_ReadSerial (void *params)
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
   
-  for (int i = 255; i < 0 ; i --)
+  for (int i = 255; i > 0 ; i --)
   {
     ledc_set_duty(LEDC_LOW_SPEED_MODE,LEDC_CHANNEL_0,i);
     ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
