@@ -87,8 +87,7 @@ void loop()
    gpio_set_level(LED_BLUE, 0);
    gpio_set_level(V_OUT,1);
    //Serial.println("loop teste");
-   vTaskDelay( 10 / portTICK_PERIOD_MS); // Função de Delay do FreeRTOS, em tempo real. 1000ms = 1s
-
+   vTaskDelay( 1000 / portTICK_PERIOD_MS); // Função de Delay do FreeRTOS, em tempo real. 1000ms = 1s
 
 
 
@@ -101,22 +100,16 @@ void Task_Undershoot(void * params)
   {
     
     Serial.println("UnderShoot");
-    ledc_set_duty(LEDC_LOW_SPEED_MODE,LEDC_CHANNEL_0,10);
-    ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
-
     bool state = 0;
 
-    for (int i = fall; i < 7 ; i ++)
+    for (int i = 0; i < 10 ; i ++)
     {
       state = !state;
       gpio_set_level(LED_BLUE, state);
-      gpio_set_level(V_OUT,0);
-      gpio_set_level(LED_BLUE, state);
-      //ledc_set_duty(LEDC_LOW_SPEED_MODE,LEDC_CHANNEL_0,i);
-      //ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
-      vTaskDelay(20 / portTICK_PERIOD_MS);
-    }
+      gpio_set_level(V_OUT,state);
 
+      vTaskDelay(250 / portTICK_PERIOD_MS);
+    }
     vTaskDelay( 300000 / portTICK_PERIOD_MS); // Função de Delay do FreeRTOS, em tempo real 1000ms = 1s
 
   }
